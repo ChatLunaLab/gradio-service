@@ -9,6 +9,7 @@ import {
     type Dependency,
     type ComponentMeta
 } from '../types'
+import { FileData } from '../upload'
 
 export function updateObject(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,45 +217,4 @@ export function handlePayload(
     }
 
     return updatedPayload
-}
-
-export class FileData {
-    path: string
-    url?: string
-    orig_name?: string
-    size?: number
-    blob?: File
-    is_stream?: boolean
-    mime_type?: string
-    alt_text?: string
-    readonly meta = { _type: 'gradio.FileData' }
-
-    constructor({
-        path,
-        url,
-        orig_name,
-        size,
-        blob,
-        is_stream,
-        mime_type,
-        alt_text
-    }: {
-        path: string
-        url?: string
-        orig_name?: string
-        size?: number
-        blob?: File
-        is_stream?: boolean
-        mime_type?: string
-        alt_text?: string
-    }) {
-        this.path = path
-        this.url = url
-        this.orig_name = orig_name
-        this.size = size
-        this.blob = url ? undefined : blob
-        this.is_stream = is_stream
-        this.mime_type = mime_type
-        this.alt_text = alt_text
-    }
 }

@@ -155,292 +155,403 @@ export function submit(
             }
         }
 
-        ;(async () => {
-            const inputData = handlePayload(
-                resolvedData,
-                dependency,
-                config.components,
-                'input',
-                true
-            )
-            payload = {
-                data: inputData || [],
-                event_data: eventData,
-                fn_index,
-                trigger_id: triggerId
-            }
-
-            if (skipQueue(fn_index, config)) {
-                fireEvent({
-                    type: 'status',
-                    endpoint: _endpoint,
-                    stage: 'pending',
-                    queue: false,
-                    fn_index,
-                    time: new Date()
-                })
-
-                this.postData(
-                    `${config.root}/run${
-                        _endpoint.startsWith('/') ? _endpoint : `/${_endpoint}`
-                    }${urlParams ? '?' + urlParams : ''}`,
-                    {
-                        ...payload,
-                        session_hash
-                    }
+        this.handleBlob(config.root, resolvedData, endpoint_info).then(
+            async (_payload) => {
+                const inputData = handlePayload(
+                    _payload,
+                    dependency,
+                    config.components,
+                    'input',
+                    true
                 )
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .then(([output, statusCode]: any) => {
-                        const data = output.data
-                        if (statusCode === 200) {
-                            fireEvent({
-                                type: 'data',
-                                endpoint: _endpoint,
-                                fn_index,
-                                data: handlePayload(
-                                    data,
-                                    dependency,
-                                    config.components,
-                                    'output',
-                                    options.with_null_state
-                                ),
-                                time: new Date(),
-                                event_data: eventData,
-                                trigger_id: triggerId
-                            })
+                payload = {
+                    data: inputData || [],
+                    event_data: eventData,
+                    fn_index,
+                    trigger_id: triggerId
+                }
 
-                            fireEvent({
-                                type: 'status',
-                                endpoint: _endpoint,
-                                fn_index,
-                                stage: 'complete',
-                                eta: output.average_duration,
-                                queue: false,
-                                time: new Date()
-                            })
-                        } else {
+                if (skipQueue(fn_index, config)) {
+                    fireEvent({
+                        type: 'status',
+                        endpoint: _endpoint,
+                        stage: 'pending',
+                        queue: false,
+                        fn_index,
+                        time: new Date()
+                    })
+
+                    this.postData(
+                        `${config.root}/run${
+                            _endpoint.startsWith('/')
+                                ? _endpoint
+                                : `/${_endpoint}`
+                        }${urlParams ? '?' + urlParams : ''}`,
+                        {
+                            ...payload,
+                            session_hash
+                        }
+                    )
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        .then(([output, statusCode]: any) => {
+                            const data = output.data
+                            if (statusCode === 200) {
+                                fireEvent({
+                                    type: 'data',
+                                    endpoint: _endpoint,
+                                    fn_index,
+                                    data: handlePayload(
+                                        data,
+                                        dependency,
+                                        config.components,
+                                        'output',
+                                        options.with_null_state
+                                    ),
+                                    time: new Date(),
+                                    event_data: eventData,
+                                    trigger_id: triggerId
+                                })
+
+                                fireEvent({
+                                    type: 'status',
+                                    endpoint: _endpoint,
+                                    fn_index,
+                                    stage: 'complete',
+                                    eta: output.average_duration,
+                                    queue: false,
+                                    time: new Date()
+                                })
+                            } else {
+                                fireEvent({
+                                    type: 'status',
+                                    stage: 'error',
+                                    endpoint: _endpoint,
+                                    fn_index,
+                                    message: output.error,
+                                    queue: false,
+                                    time: new Date()
+                                })
+                            }
+                        })
+                        .catch((e) => {
                             fireEvent({
                                 type: 'status',
                                 stage: 'error',
+                                message: e.message,
                                 endpoint: _endpoint,
                                 fn_index,
-                                message: output.error,
                                 queue: false,
                                 time: new Date()
                             })
-                        }
-                    })
-                    .catch((e) => {
-                        fireEvent({
-                            type: 'status',
-                            stage: 'error',
-                            message: e.message,
-                            endpoint: _endpoint,
-                            fn_index,
-                            queue: false,
-                            time: new Date()
                         })
-                    })
-            } else if (protocol === 'ws') {
-                const { ws_protocol, host } = await processEndpoint(
-                    appReference,
-                    hf_token
-                )
-
-                fireEvent({
-                    type: 'status',
-                    stage: 'pending',
-                    queue: true,
-                    endpoint: _endpoint,
-                    fn_index,
-                    time: new Date()
-                })
-
-                const url = new URL(
-                    `${ws_protocol}://${resolveRoot(
-                        host,
-                        config.path as string,
-                        true
-                    )}/queue/join${urlParams ? '?' + urlParams : ''}`
-                )
-
-                if (this.jwt) {
-                    url.searchParams.set('__sign', this.jwt)
-                }
-
-                websocket = this.ctx.http.ws(url)
-
-                websocket.onclose = (evt) => {
-                    if (!evt.wasClean) {
-                        fireEvent({
-                            type: 'status',
-                            stage: 'error',
-                            broken: true,
-                            message: BROKEN_CONNECTION_MSG,
-                            queue: true,
-                            endpoint: _endpoint,
-                            fn_index,
-                            time: new Date()
-                        })
-                    }
-                }
-
-                websocket.onmessage = function (event) {
-                    const _data = JSON.parse(event.data)
-                    const { type, status, data } = handleMessage(
-                        _data,
-                        lastStatus[fn_index]
+                } else if (protocol === 'ws') {
+                    const { ws_protocol, host } = await processEndpoint(
+                        appReference,
+                        hf_token
                     )
 
-                    if (type === 'update' && status && !complete) {
-                        // call 'status' listeners
-                        fireEvent({
-                            type: 'status',
-                            endpoint: _endpoint,
-                            fn_index,
-                            time: new Date(),
-                            ...status
-                        })
-                        if (status.stage === 'error') {
-                            websocket.close()
-                        }
-                    } else if (type === 'hash') {
-                        websocket.send(
-                            JSON.stringify({ fn_index, session_hash })
-                        )
-                        return
-                    } else if (type === 'data') {
-                        websocket.send(
-                            JSON.stringify({ ...payload, session_hash })
-                        )
-                    } else if (type === 'complete') {
-                        complete = status
-                    } else if (type === 'log') {
-                        fireEvent({
-                            type: 'log',
-                            log: data.log,
-                            level: data.level,
-                            endpoint: _endpoint,
-                            duration: data.duration,
-                            visible: data.visible,
-                            fn_index
-                        })
-                    } else if (type === 'generating') {
-                        fireEvent({
-                            type: 'status',
-                            time: new Date(),
-                            ...status,
-                            stage: status?.stage,
-                            queue: true,
-                            endpoint: _endpoint,
-                            fn_index
-                        })
-                    }
-                    if (data) {
-                        fireEvent({
-                            type: 'data',
-                            time: new Date(),
-                            data: handlePayload(
-                                data.data,
-                                dependency,
-                                config.components,
-                                'output',
-                                options.with_null_state
-                            ),
-                            endpoint: _endpoint,
-                            fn_index,
-                            event_data: eventData,
-                            trigger_id: triggerId
-                        })
+                    fireEvent({
+                        type: 'status',
+                        stage: 'pending',
+                        queue: true,
+                        endpoint: _endpoint,
+                        fn_index,
+                        time: new Date()
+                    })
 
-                        if (complete) {
+                    const url = new URL(
+                        `${ws_protocol}://${resolveRoot(
+                            host,
+                            config.path as string,
+                            true
+                        )}/queue/join${urlParams ? '?' + urlParams : ''}`
+                    )
+
+                    if (this.jwt) {
+                        url.searchParams.set('__sign', this.jwt)
+                    }
+
+                    websocket = this.ctx.http.ws(url)
+
+                    websocket.onclose = (evt) => {
+                        if (!evt.wasClean) {
+                            fireEvent({
+                                type: 'status',
+                                stage: 'error',
+                                broken: true,
+                                message: BROKEN_CONNECTION_MSG,
+                                queue: true,
+                                endpoint: _endpoint,
+                                fn_index,
+                                time: new Date()
+                            })
+                        }
+                    }
+
+                    websocket.onmessage = function (event) {
+                        const _data = JSON.parse(event.data)
+                        const { type, status, data } = handleMessage(
+                            _data,
+                            lastStatus[fn_index]
+                        )
+
+                        if (type === 'update' && status && !complete) {
+                            // call 'status' listeners
+                            fireEvent({
+                                type: 'status',
+                                endpoint: _endpoint,
+                                fn_index,
+                                time: new Date(),
+                                ...status
+                            })
+                            if (status.stage === 'error') {
+                                websocket.close()
+                            }
+                        } else if (type === 'hash') {
+                            websocket.send(
+                                JSON.stringify({ fn_index, session_hash })
+                            )
+                            return
+                        } else if (type === 'data') {
+                            websocket.send(
+                                JSON.stringify({ ...payload, session_hash })
+                            )
+                        } else if (type === 'complete') {
+                            complete = status
+                        } else if (type === 'log') {
+                            fireEvent({
+                                type: 'log',
+                                log: data.log,
+                                level: data.level,
+                                endpoint: _endpoint,
+                                duration: data.duration,
+                                visible: data.visible,
+                                fn_index
+                            })
+                        } else if (type === 'generating') {
                             fireEvent({
                                 type: 'status',
                                 time: new Date(),
-                                ...complete,
+                                ...status,
                                 stage: status?.stage,
                                 queue: true,
                                 endpoint: _endpoint,
                                 fn_index
                             })
-                            websocket.close()
+                        }
+                        if (data) {
+                            fireEvent({
+                                type: 'data',
+                                time: new Date(),
+                                data: handlePayload(
+                                    data.data,
+                                    dependency,
+                                    config.components,
+                                    'output',
+                                    options.with_null_state
+                                ),
+                                endpoint: _endpoint,
+                                fn_index,
+                                event_data: eventData,
+                                trigger_id: triggerId
+                            })
+
+                            if (complete) {
+                                fireEvent({
+                                    type: 'status',
+                                    time: new Date(),
+                                    ...complete,
+                                    stage: status?.stage,
+                                    queue: true,
+                                    endpoint: _endpoint,
+                                    fn_index
+                                })
+                                websocket.close()
+                            }
                         }
                     }
-                }
 
-                // different ws contract for gradio versions older than 3.6.0
+                    // different ws contract for gradio versions older than 3.6.0
 
-                if (semiver(config.version || '2.0.0', '3.6') < 0) {
-                    addEventListener('open', () =>
-                        websocket.send(JSON.stringify({ hash: session_hash }))
-                    )
-                }
-            } else if (protocol === 'sse') {
-                fireEvent({
-                    type: 'status',
-                    stage: 'pending',
-                    queue: true,
-                    endpoint: _endpoint,
-                    fn_index,
-                    time: new Date()
-                })
-                const params = new URLSearchParams({
-                    fn_index: fn_index.toString(),
-                    session_hash
-                }).toString()
-                const url = new URL(
-                    `${config.root}/queue/join?${
-                        urlParams ? urlParams + '&' : ''
-                    }${params}`
-                )
-
-                if (this.jwt) {
-                    url.searchParams.set('__sign', this.jwt)
-                }
-
-                stream = this.stream(url)
-
-                if (!stream) {
-                    return Promise.reject(
-                        new Error(
-                            'Cannot connect to SSE endpoint: ' + url.toString()
+                    if (semiver(config.version || '2.0.0', '3.6') < 0) {
+                        addEventListener('open', () =>
+                            websocket.send(
+                                JSON.stringify({ hash: session_hash })
+                            )
                         )
+                    }
+                } else if (protocol === 'sse') {
+                    fireEvent({
+                        type: 'status',
+                        stage: 'pending',
+                        queue: true,
+                        endpoint: _endpoint,
+                        fn_index,
+                        time: new Date()
+                    })
+                    const params = new URLSearchParams({
+                        fn_index: fn_index.toString(),
+                        session_hash
+                    }).toString()
+                    const url = new URL(
+                        `${config.root}/queue/join?${
+                            urlParams ? urlParams + '&' : ''
+                        }${params}`
                     )
-                }
 
-                stream.onmessage = async function (event: MessageEvent) {
-                    const _data = JSON.parse(event.data)
-                    const { type, status, data } = handleMessage(
-                        _data,
-                        lastStatus[fn_index]
-                    )
+                    if (this.jwt) {
+                        url.searchParams.set('__sign', this.jwt)
+                    }
 
-                    if (type === 'update' && status && !complete) {
-                        // call 'status' listeners
-                        fireEvent({
-                            type: 'status',
-                            endpoint: _endpoint,
-                            fn_index,
-                            time: new Date(),
-                            ...status
-                        })
-                        if (status.stage === 'error') {
-                            stream?.close()
-                            close()
-                        }
-                    } else if (type === 'data') {
-                        eventId = _data.event_id as string
+                    stream = this.stream(url)
 
-                        const [, status] = await that.postData(
-                            `${config.root}/queue/data`,
-                            {
-                                ...payload,
-                                session_hash,
-                                event_id: eventId
+                    if (!stream) {
+                        return Promise.reject(
+                            new Error(
+                                'Cannot connect to SSE endpoint: ' +
+                                    url.toString()
+                            )
+                        )
+                    }
+
+                    stream.onmessage = async function (event: MessageEvent) {
+                        const _data = JSON.parse(event.data)
+                        const { type, status, data } = handleMessage(
+                            _data,
+                            lastStatus[fn_index]
+                        )
+
+                        if (type === 'update' && status && !complete) {
+                            // call 'status' listeners
+                            fireEvent({
+                                type: 'status',
+                                endpoint: _endpoint,
+                                fn_index,
+                                time: new Date(),
+                                ...status
+                            })
+                            if (status.stage === 'error') {
+                                stream?.close()
+                                close()
                             }
-                        )
+                        } else if (type === 'data') {
+                            eventId = _data.event_id as string
 
-                        if (status !== 200) {
+                            const [, status] = await that.postData(
+                                `${config.root}/queue/data`,
+                                {
+                                    ...payload,
+                                    session_hash,
+                                    event_id: eventId
+                                }
+                            )
+
+                            if (status !== 200) {
+                                fireEvent({
+                                    type: 'status',
+                                    stage: 'error',
+                                    message: BROKEN_CONNECTION_MSG,
+                                    queue: true,
+                                    endpoint: _endpoint,
+                                    fn_index,
+                                    time: new Date()
+                                })
+                                stream?.close()
+                                close()
+                            }
+                        } else if (type === 'complete') {
+                            complete = status
+                        } else if (type === 'log') {
+                            fireEvent({
+                                type: 'log',
+                                log: data.log,
+                                level: data.level,
+                                endpoint: _endpoint,
+                                duration: data.duration,
+                                visible: data.visible,
+                                fn_index
+                            })
+                        } else if (type === 'generating') {
+                            fireEvent({
+                                type: 'status',
+                                time: new Date(),
+                                ...status,
+                                stage: status?.stage,
+                                queue: true,
+                                endpoint: _endpoint,
+                                fn_index
+                            })
+                        }
+                        if (data) {
+                            fireEvent({
+                                type: 'data',
+                                time: new Date(),
+                                data: handlePayload(
+                                    data.data,
+                                    dependency,
+                                    config.components,
+                                    'output',
+                                    options.with_null_state
+                                ),
+                                endpoint: _endpoint,
+                                fn_index,
+                                event_data: eventData,
+                                trigger_id: triggerId
+                            })
+
+                            if (complete) {
+                                fireEvent({
+                                    type: 'status',
+                                    time: new Date(),
+                                    ...complete,
+                                    stage: status?.stage,
+                                    queue: true,
+                                    endpoint: _endpoint,
+                                    fn_index
+                                })
+                                stream?.close()
+                                close()
+                            }
+                        }
+                    }
+                } else if (
+                    protocol === 'sse_v1' ||
+                    protocol === 'sse_v2' ||
+                    protocol === 'sse_v2.1' ||
+                    protocol === 'sse_v3'
+                ) {
+                    // latest API format. v2 introduces sending diffs for intermediate outputs in generative functions, which makes payloads lighter.
+                    // v3 only closes the stream when the backend sends the close stream message.
+                    fireEvent({
+                        type: 'status',
+                        stage: 'pending',
+                        queue: true,
+                        endpoint: _endpoint,
+                        fn_index,
+                        time: new Date()
+                    })
+
+                    const postDataPromise = that.postData(
+                        `${config.root}/queue/join?${urlParams}`,
+                        {
+                            ...payload,
+                            session_hash
+                        }
+                    )
+
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    postDataPromise.then(async ([response, status]: any) => {
+                        if (status === 503) {
+                            fireEvent({
+                                type: 'status',
+                                stage: 'error',
+                                message: QUEUE_FULL_MSG,
+                                queue: true,
+                                endpoint: _endpoint,
+                                fn_index,
+                                time: new Date()
+                            })
+                        } else if (status !== 200) {
                             fireEvent({
                                 type: 'status',
                                 stage: 'error',
@@ -450,274 +561,178 @@ export function submit(
                                 fn_index,
                                 time: new Date()
                             })
-                            stream?.close()
-                            close()
-                        }
-                    } else if (type === 'complete') {
-                        complete = status
-                    } else if (type === 'log') {
-                        fireEvent({
-                            type: 'log',
-                            log: data.log,
-                            level: data.level,
-                            endpoint: _endpoint,
-                            duration: data.duration,
-                            visible: data.visible,
-                            fn_index
-                        })
-                    } else if (type === 'generating') {
-                        fireEvent({
-                            type: 'status',
-                            time: new Date(),
-                            ...status,
-                            stage: status?.stage,
-                            queue: true,
-                            endpoint: _endpoint,
-                            fn_index
-                        })
-                    }
-                    if (data) {
-                        fireEvent({
-                            type: 'data',
-                            time: new Date(),
-                            data: handlePayload(
-                                data.data,
-                                dependency,
-                                config.components,
-                                'output',
-                                options.with_null_state
-                            ),
-                            endpoint: _endpoint,
-                            fn_index,
-                            event_data: eventData,
-                            trigger_id: triggerId
-                        })
+                        } else {
+                            eventId = response.event_id as string
+                            const callback = async function (
+                                _data: object
+                            ): Promise<void> {
+                                try {
+                                    const { type, status, data } =
+                                        handleMessage(
+                                            _data,
+                                            lastStatus[fn_index]
+                                        )
 
-                        if (complete) {
-                            fireEvent({
-                                type: 'status',
-                                time: new Date(),
-                                ...complete,
-                                stage: status?.stage,
-                                queue: true,
-                                endpoint: _endpoint,
-                                fn_index
-                            })
-                            stream?.close()
-                            close()
-                        }
-                    }
-                }
-            } else if (
-                protocol === 'sse_v1' ||
-                protocol === 'sse_v2' ||
-                protocol === 'sse_v2.1' ||
-                protocol === 'sse_v3'
-            ) {
-                // latest API format. v2 introduces sending diffs for intermediate outputs in generative functions, which makes payloads lighter.
-                // v3 only closes the stream when the backend sends the close stream message.
-                fireEvent({
-                    type: 'status',
-                    stage: 'pending',
-                    queue: true,
-                    endpoint: _endpoint,
-                    fn_index,
-                    time: new Date()
-                })
+                                    if (type === 'heartbeat') {
+                                        return
+                                    }
 
-                const postDataPromise = that.postData(
-                    `${config.root}/queue/join?${urlParams}`,
-                    {
-                        ...payload,
-                        session_hash
-                    }
-                )
+                                    if (
+                                        type === 'update' &&
+                                        status &&
+                                        !complete
+                                    ) {
+                                        // call 'status' listeners
+                                        fireEvent({
+                                            type: 'status',
+                                            endpoint: _endpoint,
+                                            fn_index,
+                                            time: new Date(),
+                                            ...status
+                                        })
+                                    } else if (type === 'complete') {
+                                        complete = status
+                                    } else if (type === 'unexpected_error') {
+                                        that.ctx.logger.error(
+                                            'Unexpected error',
+                                            status?.message
+                                        )
+                                        fireEvent({
+                                            type: 'status',
+                                            stage: 'error',
+                                            message:
+                                                status?.message ||
+                                                'An Unexpected Error Occurred!',
+                                            queue: true,
+                                            endpoint: _endpoint,
+                                            fn_index,
+                                            time: new Date()
+                                        })
+                                    } else if (type === 'log') {
+                                        fireEvent({
+                                            type: 'log',
+                                            log: data.log,
+                                            level: data.level,
+                                            endpoint: _endpoint,
+                                            duration: data.duration,
+                                            visible: data.visible,
+                                            fn_index
+                                        })
+                                        return
+                                    } else if (type === 'generating') {
+                                        fireEvent({
+                                            type: 'status',
+                                            time: new Date(),
+                                            ...status,
+                                            stage: status?.stage,
+                                            queue: true,
+                                            endpoint: _endpoint,
+                                            fn_index
+                                        })
+                                        if (
+                                            data &&
+                                            [
+                                                'sse_v2',
+                                                'sse_v2.1',
+                                                'sse_v3'
+                                            ].includes(protocol)
+                                        ) {
+                                            applyDiffStream(
+                                                pendingDiffStreams,
+                                                eventId!,
+                                                data
+                                            )
+                                        }
+                                    }
+                                    if (data) {
+                                        fireEvent({
+                                            type: 'data',
+                                            time: new Date(),
+                                            data: handlePayload(
+                                                data.data,
+                                                dependency,
+                                                config.components,
+                                                'output',
+                                                options.with_null_state
+                                            ),
+                                            endpoint: _endpoint,
+                                            fn_index
+                                        })
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                postDataPromise.then(async ([response, status]: any) => {
-                    if (status === 503) {
-                        fireEvent({
-                            type: 'status',
-                            stage: 'error',
-                            message: QUEUE_FULL_MSG,
-                            queue: true,
-                            endpoint: _endpoint,
-                            fn_index,
-                            time: new Date()
-                        })
-                    } else if (status !== 200) {
-                        fireEvent({
-                            type: 'status',
-                            stage: 'error',
-                            message: BROKEN_CONNECTION_MSG,
-                            queue: true,
-                            endpoint: _endpoint,
-                            fn_index,
-                            time: new Date()
-                        })
-                    } else {
-                        eventId = response.event_id as string
-                        const callback = async function (
-                            _data: object
-                        ): Promise<void> {
-                            try {
-                                const { type, status, data } = handleMessage(
-                                    _data,
-                                    lastStatus[fn_index]
-                                )
+                                        if (complete) {
+                                            fireEvent({
+                                                type: 'status',
+                                                time: new Date(),
+                                                ...complete,
+                                                stage: status?.stage,
+                                                queue: true,
+                                                endpoint: _endpoint,
+                                                fn_index
+                                            })
 
-                                if (type === 'heartbeat') {
-                                    return
-                                }
+                                            close()
+                                        }
+                                    }
 
-                                if (type === 'update' && status && !complete) {
-                                    // call 'status' listeners
-                                    fireEvent({
-                                        type: 'status',
-                                        endpoint: _endpoint,
-                                        fn_index,
-                                        time: new Date(),
-                                        ...status
-                                    })
-                                } else if (type === 'complete') {
-                                    complete = status
-                                } else if (type === 'unexpected_error') {
+                                    if (
+                                        status?.stage === 'complete' ||
+                                        status?.stage === 'error'
+                                    ) {
+                                        if (eventCallbacks[eventId!]) {
+                                            delete eventCallbacks[eventId!]
+                                        }
+                                        if (eventId! in pendingDiffStreams) {
+                                            delete pendingDiffStreams[eventId!]
+                                        }
+                                    }
+                                } catch (e) {
                                     that.ctx.logger.error(
-                                        'Unexpected error',
-                                        status?.message
+                                        'Unexpected client exception',
+                                        e
                                     )
                                     fireEvent({
                                         type: 'status',
                                         stage: 'error',
                                         message:
-                                            status?.message ||
                                             'An Unexpected Error Occurred!',
                                         queue: true,
                                         endpoint: _endpoint,
                                         fn_index,
                                         time: new Date()
                                     })
-                                } else if (type === 'log') {
-                                    fireEvent({
-                                        type: 'log',
-                                        log: data.log,
-                                        level: data.level,
-                                        endpoint: _endpoint,
-                                        duration: data.duration,
-                                        visible: data.visible,
-                                        fn_index
-                                    })
-                                    return
-                                } else if (type === 'generating') {
-                                    fireEvent({
-                                        type: 'status',
-                                        time: new Date(),
-                                        ...status,
-                                        stage: status?.stage,
-                                        queue: true,
-                                        endpoint: _endpoint,
-                                        fn_index
-                                    })
                                     if (
-                                        data &&
                                         [
                                             'sse_v2',
                                             'sse_v2.1',
                                             'sse_v3'
                                         ].includes(protocol)
                                     ) {
-                                        applyDiffStream(
-                                            pendingDiffStreams,
-                                            eventId!,
-                                            data
+                                        closeStream(
+                                            streamStatus,
+                                            that.abortController
                                         )
-                                    }
-                                }
-                                if (data) {
-                                    fireEvent({
-                                        type: 'data',
-                                        time: new Date(),
-                                        data: handlePayload(
-                                            data.data,
-                                            dependency,
-                                            config.components,
-                                            'output',
-                                            options.with_null_state
-                                        ),
-                                        endpoint: _endpoint,
-                                        fn_index
-                                    })
-
-                                    if (complete) {
-                                        fireEvent({
-                                            type: 'status',
-                                            time: new Date(),
-                                            ...complete,
-                                            stage: status?.stage,
-                                            queue: true,
-                                            endpoint: _endpoint,
-                                            fn_index
-                                        })
-
+                                        streamStatus.open = false
                                         close()
                                     }
                                 }
+                            }
 
-                                if (
-                                    status?.stage === 'complete' ||
-                                    status?.stage === 'error'
-                                ) {
-                                    if (eventCallbacks[eventId!]) {
-                                        delete eventCallbacks[eventId!]
-                                    }
-                                    if (eventId! in pendingDiffStreams) {
-                                        delete pendingDiffStreams[eventId!]
-                                    }
-                                }
-                            } catch (e) {
-                                that.ctx.logger.error(
-                                    'Unexpected client exception',
-                                    e
+                            if (eventId in pendingStreamMessages) {
+                                pendingStreamMessages[eventId].forEach((msg) =>
+                                    callback(msg)
                                 )
-                                fireEvent({
-                                    type: 'status',
-                                    stage: 'error',
-                                    message: 'An Unexpected Error Occurred!',
-                                    queue: true,
-                                    endpoint: _endpoint,
-                                    fn_index,
-                                    time: new Date()
-                                })
-                                if (
-                                    ['sse_v2', 'sse_v2.1', 'sse_v3'].includes(
-                                        protocol
-                                    )
-                                ) {
-                                    closeStream(
-                                        streamStatus,
-                                        that.abortController
-                                    )
-                                    streamStatus.open = false
-                                    close()
-                                }
+                                delete pendingStreamMessages[eventId]
+                            }
+                            eventCallbacks[eventId] = callback
+                            unclosedEvents.add(eventId)
+                            if (!streamStatus.open) {
+                                await this.openStream()
                             }
                         }
-
-                        if (eventId in pendingStreamMessages) {
-                            pendingStreamMessages[eventId].forEach((msg) =>
-                                callback(msg)
-                            )
-                            delete pendingStreamMessages[eventId]
-                        }
-                        eventCallbacks[eventId] = callback
-                        unclosedEvents.add(eventId)
-                        if (!streamStatus.open) {
-                            await this.openStream()
-                        }
-                    }
-                })
+                    })
+                }
             }
-        })()
+        )
 
         function close(): void {
             done = true

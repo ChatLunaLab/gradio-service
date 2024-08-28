@@ -7,6 +7,7 @@ export * from './client'
 export * from './constants'
 export * from './helpers/index'
 export * from './utils/index'
+export * from './types'
 
 class GradioClientService extends Service {
     constructor(ctx: Context) {

@@ -1,16 +1,20 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Context } from 'koishi'
 import {
+    ApiData,
     ApiInfo,
     client_return,
     ClientOptions,
     Config,
+    EndpointInfo,
+    FileData,
     GradioEvent,
     JsApiData,
     PostResponse,
     PredictReturn,
     Status,
-    SubmitIterable
+    SubmitIterable,
+    UploadResponse
 } from './types'
 import { processEndpoint } from './helpers/api_info'
 import { API_INFO_ERROR_MSG, CONFIG_ERROR_MSG } from './constants'
@@ -25,6 +29,8 @@ import { closeStream, openStream, readableStream } from './utils/stream'
 import { postData } from './utils/post_data'
 import { submit } from './utils/submit'
 import { predict } from './utils/predict'
+import { uploadFiles } from './utils/upload_files'
+import { handleBlob } from './utils/handle_blob'
 
 export class Client {
     appReference: string
@@ -65,6 +71,26 @@ export class Client {
         event_data?: unknown
     ) => Promise<PredictReturn>
 
+    uploadFiles: (
+        root_url: string,
+        files: (Blob | File)[],
+        upload_id?: string
+    ) => Promise<UploadResponse>
+
+    upload: (
+        file_data: FileData[],
+        root_url: string,
+        upload_id?: string,
+        max_file_size?: number
+    ) => Promise<(FileData | null)[] | null>
+
+    handleBlob: (
+        endpoint: string,
+        data: unknown[],
+        endpoint_info: EndpointInfo<ApiData | JsApiData>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ) => Promise<any[]>
+
     // streaming
     streamStatus = { open: false }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,6 +122,8 @@ export class Client {
         this.postData = postData.bind(this)
         this.submit = submit.bind(this)
         this.predict = predict.bind(this)
+        this.uploadFiles = uploadFiles.bind(this)
+        this.handleBlob = handleBlob.bind(this)
 
         ctx.on('dispose', () => {
             this.close()
