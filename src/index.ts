@@ -14,8 +14,11 @@ class GradioClientService extends Service {
         super(ctx, 'gradio')
     }
 
-    connect(...args: Parameters<(typeof Client)['connect']>) {
-        return Client.connect(...args)
+    connect(
+        url: string,
+        options?: Parameters<(typeof Client)['connect']>['2']
+    ) {
+        return Client.connect(this.ctx, url, options)
     }
 }
 

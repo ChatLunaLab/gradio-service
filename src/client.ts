@@ -48,7 +48,7 @@ export class Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolveConfig: (url: string) => Promise<any>
     private resolveCookie: () => Promise<void>
-    private viewApi: () => Promise<ApiInfo<JsApiData>>
+    viewApi: () => Promise<ApiInfo<JsApiData>>
     openStream: () => Promise<void>
 
     postData: (
