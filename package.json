@@ -1,7 +1,7 @@
 {
     "name": "koishi-plugin-gradio-service",
     "description": "Provider @gradio/client support for Koishi",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "type": "module",
     "main": "lib/index.cjs",
     "module": "lib/index.mjs",
@@ -19,7 +19,7 @@
         "dist",
         "resources"
     ],
-    "license": "AGPL-3.0",
+    "license": "MIT",
     "keywords": [
         "koishi",
         "plugin",

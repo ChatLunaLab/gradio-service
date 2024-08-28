@@ -18,6 +18,12 @@ class GradioClientService extends Service {
     }
 }
 
+declare module 'koishi' {
+    interface Context {
+        gradio: GradioClientService
+    }
+}
+
 export const inject = {}
 
 namespace GradioClientService {
