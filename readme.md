@@ -10,7 +10,13 @@ _提供 @gradio/client 支持_
 
 ## 特性
 
-无
+Fork 自 [@gradio/client](https://github.com/gradio-app/gradio/tree/2b6cbf25908e42cf027324e54ef2cc0baad11a91/client/js)，裁剪了一些支持，并且支持了 Koishi 的 HTTP 服务。
+
+其中以下功能未实现：
+
+- 上传文件
+- duplicate
+
 
 ## 使用
 

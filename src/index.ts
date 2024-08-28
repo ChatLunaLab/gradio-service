@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-len */
+import { Client } from './client'
 import { Context, Schema, Service } from 'koishi'
-import { Client } from '@gradio/client'
 
-export * from '@gradio/client'
+export * from './client'
+export * from './constants'
+export * from './helpers/index'
+export * from './utils/index'
+
 class GradioClientService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'gradio')
@@ -11,10 +15,6 @@ class GradioClientService extends Service {
 
     connect(...args: Parameters<(typeof Client)['connect']>) {
         return Client.connect(...args)
-    }
-
-    duplicate(...args: Parameters<(typeof Client)['duplicate']>) {
-        return Client.duplicate(...args)
     }
 }
 
