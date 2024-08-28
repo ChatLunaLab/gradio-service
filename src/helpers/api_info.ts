@@ -168,7 +168,8 @@ export function transformAPIInfo(
                                 component,
                                 serializer,
                                 signatureType
-                            ) || ''
+                            ) || '',
+                        enum: data?.type?.enum || undefined
                     })
 
                     transformedInfo[category][endpoint] = {

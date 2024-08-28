@@ -314,7 +314,10 @@ export function submit(
                             return
                         } else if (type === 'data') {
                             websocket.send(
-                                JSON.stringify({ ...payload, session_hash })
+                                JSON.stringify({
+                                    ...payload,
+                                    session_hash
+                                })
                             )
                         } else if (type === 'complete') {
                             complete = status

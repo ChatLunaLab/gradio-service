@@ -10,6 +10,7 @@ export interface ApiData {
     type: {
         type: any
         description: string
+        enum?: string[]
     }
     component: string
     example_input?: any
@@ -23,6 +24,7 @@ export interface JsApiData {
     parameter_default?: any
     parameter_has_default?: boolean
     type: string
+    enum?: string[]
     description: string
     component: string
     example_input?: any
