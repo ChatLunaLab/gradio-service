@@ -29,13 +29,13 @@
     "author": "dingyi222666 <dingyi222666@foxmail.com>",
     "repository": {
         "type": "git",
-        "url": "https://github.com/dingyi222666/koishi-plugin-gradio-service.git",
+        "url": "https://github.com/dingyi222666/gradio-service.git",
         "directory": "."
     },
     "bugs": {
-        "url": "https://github.com/dingyi222666/koishi-plugin-gradio-service/issues"
+        "url": "https://github.com/dingyi222666/gradio-service/issues"
     },
-    "homepage": "https://github.com/dingyi222666/koishi-plugin-gradio-service#readme",
+    "homepage": "https://github.com/dingyi222666/gradio-service#readme",
     "dependencies": {
         "@gradio/client": "^1.5.1"
     },
