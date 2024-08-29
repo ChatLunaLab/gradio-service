@@ -3,7 +3,6 @@ import { Context } from 'koishi'
 import {
     ApiData,
     ApiInfo,
-    client_return,
     ClientOptions,
     Config,
     EndpointInfo,
@@ -46,7 +45,7 @@ export class Client {
     private cookies: string | null = null
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private resolveConfig: (url: string) => Promise<any>
+    private _resolveConfig: (url: string) => Promise<any>
     private resolveCookie: () => Promise<void>
     viewApi: () => Promise<ApiInfo<JsApiData>>
     openStream: () => Promise<void>
@@ -115,7 +114,7 @@ export class Client {
 
         this.options = options
 
-        this.resolveConfig = resolveConfig.bind(this)
+        this._resolveConfig = resolveConfig.bind(this)
         this.resolveCookie = resolveCookies.bind(this)
         this.viewApi = viewApi.bind(this)
         this.openStream = openStream.bind(this)
@@ -135,13 +134,17 @@ export class Client {
             await this.resolveCookie()
         }
 
-        await this._resolveConfig()
+        await this.resolveConfig()
 
         this.apiInfo = await this.viewApi()
         this.apiMap = mapNamesToIds(this.config?.dependencies || [])
     }
 
-    private async _resolveConfig() {
+    async resolveConfig() {
+        if (this.config) {
+            return this.config
+        }
+
         const { http_protocol: protocol, host } = await processEndpoint(
             this.appReference,
             this.options.hf_token
@@ -158,7 +161,7 @@ export class Client {
         let config: Config | undefined
 
         try {
-            config = await this.resolveConfig(`${protocol}//${host}`)
+            config = await this._resolveConfig(`${protocol}//${host}`)
 
             if (!config) {
                 throw new Error(CONFIG_ERROR_MSG)
@@ -177,13 +180,11 @@ export class Client {
         }
     }
 
-    private async _configSuccess(
-        _config: Config
-    ): Promise<Config | client_return> {
+    private async _configSuccess(_config: Config): Promise<Config> {
         this.config = _config
 
         if (this.config.auth_required) {
-            return this.prepareReturnObj()
+            return _config
         }
 
         try {
@@ -192,7 +193,7 @@ export class Client {
             this.ctx.logger.error(API_INFO_ERROR_MSG + (e as Error).message)
         }
 
-        return this.prepareReturnObj()
+        return _config
     }
 
     stream(url: URL): EventSource {
@@ -210,15 +211,6 @@ export class Client {
         })
 
         return this.streamInstance
-    }
-
-    private prepareReturnObj(): client_return {
-        return {
-            config: this.config,
-            predict: this.predict,
-            submit: this.submit,
-            viewApi: this.viewApi
-        }
     }
 
     public setCookies(cookies: string): void {

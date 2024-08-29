@@ -1,7 +1,7 @@
 {
     "name": "koishi-plugin-gradio-service",
     "description": "Provider @gradio/client support for Koishi",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "type": "module",
     "main": "lib/index.cjs",
     "module": "lib/index.mjs",
