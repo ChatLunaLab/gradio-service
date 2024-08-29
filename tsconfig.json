@@ -12,6 +12,7 @@
         "esModuleInterop": true,
         "moduleResolution": "Bundler",
         "jsx": "react-jsx",
+        "sourceMap": true,
         "jsxImportSource": "@satorijs/element"
     },
     "include": [

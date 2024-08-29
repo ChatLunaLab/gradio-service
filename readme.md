@@ -12,16 +12,18 @@ _提供 @gradio/client 支持_
 
 Fork 自 [@gradio/client](https://github.com/gradio-app/gradio/tree/2b6cbf25908e42cf027324e54ef2cc0baad11a91/client/js)
 
-其中以下功能未实现：
+为了体积，移除了一部分代码，其中以下功能未实现：
 
 - duplicate
 - 心跳包监听
+- huggingface space 相关 api
+- components 相关 api
 
 新增了以下特性：
 
-- 使用了 Koishi 的 HTTP 服务。
-- 裁剪了部分功能和依赖，减小包体积
-- cjs & esm 双模式支持
+- 使用了 Koishi 的 HTTP 服务
+- 移除了部分依赖，减小包体积
+- cjs & esm 同步支持
 
 ## 使用
 

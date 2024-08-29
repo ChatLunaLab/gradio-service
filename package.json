@@ -67,6 +67,7 @@
     },
     "scripts": {
         "build": "yarn yakumo build",
+        "build:prod": "yarn yakumo build --minify",
         "bump": "yarn yakumo version",
         "dep": "yarn yakumo upgrade",
         "pub": "yarn yakumo publish",
