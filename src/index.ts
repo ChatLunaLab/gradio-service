@@ -2,6 +2,7 @@
 /* eslint-disable max-len */
 import { Client } from './client'
 import { Context, Schema, Service } from 'koishi'
+import * as eventStream from '@dingyi222666/event-stream'
 
 export * from './client'
 export * from './constants'
@@ -12,6 +13,7 @@ export * from './types'
 class GradioClientService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'gradio')
+        ctx.plugin(eventStream)
     }
 
     connect(url: string, options?: object) {
