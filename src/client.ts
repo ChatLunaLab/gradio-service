@@ -18,6 +18,7 @@ import {
 import { processEndpoint } from './helpers/api_info'
 import { API_INFO_ERROR_MSG, CONFIG_ERROR_MSG } from './constants'
 import {
+    getJwt,
     mapNamesToIds,
     parseAndSetCookies,
     resolveConfig,
@@ -146,17 +147,13 @@ export class Client {
         }
 
         const { http_protocol: protocol, host } = await processEndpoint(
+            this.ctx,
             this.appReference,
             this.options.hf_token
         )
         // REMOVE SPACE CHECK
 
         const { status_callback: statusCallback } = this.options
-
-        /*
-        if (space_id && status_callback) {
-             await check_and_wake_space(space_id, status_callback)
-        } */
 
         let config: Config | undefined
 
@@ -185,6 +182,21 @@ export class Client {
 
         if (this.config.auth_required) {
             return _config
+        }
+
+        if (_config.space_id && this.options.hf_token) {
+            this.jwt = await getJwt(
+                this.ctx,
+                this.config.space_id,
+                this.options.hf_token
+            )
+
+            this.ctx.setTimeout(
+                () => {
+                    this.jwt = false
+                },
+                1000 * 60 * 30
+            )
         }
 
         try {

@@ -246,6 +246,7 @@ export function submit(
                         })
                 } else if (protocol === 'ws') {
                     const { ws_protocol, host } = await processEndpoint(
+                        this.ctx,
                         appReference,
                         hf_token
                     )

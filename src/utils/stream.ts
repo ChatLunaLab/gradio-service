@@ -3,6 +3,7 @@ import { Context, HTTP } from 'koishi'
 import { BROKEN_CONNECTION_MSG } from '../constants'
 import type {} from '@dingyi222666/event-stream'
 import { Client } from '../client'
+import { getJwt } from '../helpers'
 
 export async function openStream(this: Client): Promise<void> {
     const {
@@ -29,6 +30,18 @@ export async function openStream(this: Client): Promise<void> {
     }).toString()
 
     const url = new URL(`${config.root}/queue/data?${params}`)
+
+    if (
+        this.config.space_id &&
+        this.options.hf_token &&
+        typeof this.jwt !== 'string'
+    ) {
+        this.jwt = await getJwt(
+            this.ctx,
+            this.config.space_id,
+            this.options.hf_token
+        )
+    }
 
     if (jwt) {
         url.searchParams.set('__sign', jwt)

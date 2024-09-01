@@ -21,7 +21,7 @@ export async function getJwt(
 ): Promise<string | false> {
     try {
         const r = await ctx.http.get(
-            `https://huggingface.co/api/spaces/${space}/jwt`,
+            `${ctx.gradio.config.baseURL}/api/spaces/${space}/jwt`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -34,6 +34,7 @@ export async function getJwt(
 
         return jwt || false
     } catch (e) {
+        ctx.logger.error(`get jwt with error %s`, e)
         return false
     }
 }
@@ -167,6 +168,7 @@ export async function resolveConfig(
 
 export async function resolveCookies(this: Client): Promise<void> {
     const { http_protocol, host } = await processEndpoint(
+        this.ctx,
         this.appReference,
         this.options.hf_token
     )

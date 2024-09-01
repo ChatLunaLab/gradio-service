@@ -11,13 +11,18 @@ export * from './utils/index'
 export * from './types'
 
 class GradioClientService extends Service {
-    constructor(ctx: Context) {
+    constructor(
+        ctx: Context,
+        public config: GradioClientService.Config
+    ) {
         super(ctx, 'gradio')
         ctx.plugin(eventStream)
     }
 
     connect(url: string, options?: object) {
-        return Client.connect(this.ctx, url, options)
+        return Client.connect(this.ctx, url, {
+            ...options
+        })
     }
 }
 
@@ -30,9 +35,16 @@ declare module 'koishi' {
 export const inject = {}
 
 namespace GradioClientService {
-    export interface Config {}
+    export interface Config {
+        baseURL: string
+    }
 
-    export const Config = Schema.object({})
+    export const Config = Schema.object({
+        baseURL: Schema.string()
+            .role('url')
+            .default('https://huggingface.co')
+            .description('huggingface 的 base url')
+    })
 
     export const name = 'gradio-service'
 }

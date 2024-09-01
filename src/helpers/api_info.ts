@@ -1,3 +1,4 @@
+import { Context } from 'koishi'
 import {
     HOST_URL,
     INVALID_URL_MSG,
@@ -18,6 +19,7 @@ export const RE_SPACE_NAME = /^[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$/
 export const RE_SPACE_DOMAIN = /.*hf\.space\/{0,1}$/
 
 export async function processEndpoint(
+    ctx: Context,
     appReference: string,
     hfToken?: `hf_${string}`
 ): Promise<{
@@ -36,12 +38,12 @@ export async function processEndpoint(
     if (RE_SPACE_NAME.test(_appReference)) {
         // app_reference is a HF space name
         try {
-            const res = await fetch(
-                `https://huggingface.co/api/spaces/${_appReference}/${HOST_URL}`,
+            const res = await ctx.http.get(
+                `${ctx.gradio.config.baseURL}/api/spaces/${_appReference}/${HOST_URL}`,
                 { headers }
             )
 
-            const _host = (await res.json()).host
+            const _host = res.host
 
             return {
                 space_id: appReference,
