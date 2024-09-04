@@ -12,7 +12,7 @@ export * from './types'
 
 class GradioClientService extends Service {
     constructor(
-        ctx: Context,
+        public ctx: Context,
         public config: GradioClientService.Config
     ) {
         super(ctx, 'gradio')

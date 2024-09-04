@@ -185,18 +185,20 @@ export class Client {
         }
 
         if (_config.space_id && this.options.hf_token) {
-            this.jwt = await getJwt(
-                this.ctx,
-                this.config.space_id,
-                this.options.hf_token
-            )
+            this.ctx.inject(['gradio'], async (ctx) => {
+                this.jwt = await getJwt(
+                    ctx,
+                    this.config.space_id,
+                    this.options.hf_token
+                )
 
-            this.ctx.setTimeout(
-                () => {
-                    this.jwt = false
-                },
-                1000 * 60 * 30
-            )
+                this.ctx.setTimeout(
+                    () => {
+                        this.jwt = false
+                    },
+                    1000 * 60 * 30
+                )
+            })
         }
 
         try {

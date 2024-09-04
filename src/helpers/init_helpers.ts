@@ -34,7 +34,7 @@ export async function getJwt(
 
         return jwt || false
     } catch (e) {
-        ctx.logger.error(`get jwt with error %s`, e)
+        ctx.logger.error(`get jwt with error %s`, JSON.stringify(e.response))
         return false
     }
 }
