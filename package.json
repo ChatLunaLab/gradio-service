@@ -1,87 +1,87 @@
 {
-    "name": "koishi-plugin-gradio-service",
-    "description": "Provider @gradio/client support for Koishi",
-    "version": "0.0.8",
-    "type": "module",
-    "main": "lib/index.cjs",
-    "module": "lib/index.mjs",
-    "typings": "lib/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./lib/index.d.ts",
-            "import": "./lib/index.mjs",
-            "require": "./lib/index.cjs"
-        },
-        "./package.json": "./package.json"
+  "name": "koishi-plugin-gradio-service",
+  "description": "Provider @gradio/client support for Koishi",
+  "version": "0.0.9",
+  "type": "module",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
+  "typings": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs"
     },
-    "files": [
-        "lib",
-        "dist",
-        "resources"
-    ],
-    "license": "MIT",
-    "keywords": [
-        "koishi",
-        "plugin",
-        "service",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "dist",
+    "resources"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "koishi",
+    "plugin",
+    "service",
+    "gradio"
+  ],
+  "author": "dingyi222666 <dingyi222666@foxmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dingyi222666/gradio-service.git",
+    "directory": "."
+  },
+  "bugs": {
+    "url": "https://github.com/dingyi222666/gradio-service/issues"
+  },
+  "homepage": "https://github.com/dingyi222666/gradio-service#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^8.6.0",
+    "atsc": "^1.2.2",
+    "esbuild": "^0.23.1",
+    "esbuild-register": "^3.6.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.30.0",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-promise": "^7.1.0",
+    "koishi": "^4.18.0",
+    "yakumo": "^1.0.0-beta.18",
+    "yakumo-esbuild": "^1.0.0-beta.6",
+    "yakumo-mocha": "^1.0.0-beta.2",
+    "yakumo-tsc": "^1.0.0-beta.4"
+  },
+  "dependencies": {
+    "@dingyi222666/event-stream": "^0.0.1",
+    "semiver": "^1.1.0"
+  },
+  "peerDependencies": {
+    "koishi": "^4.17.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "yarn yakumo build",
+    "build:prod": "yarn yakumo build --minify",
+    "bump": "yarn yakumo version",
+    "dep": "yarn yakumo upgrade",
+    "pub": "yarn yakumo publish",
+    "lint": "yarn eslint src --ext=ts",
+    "lint-fix": "yarn eslint src --ext=ts --fix"
+  },
+  "koishi": {
+    "description": {
+      "zh": "为 Koishi 提供 @gradio/client 支持"
+    },
+    "service": {
+      "implements": [
         "gradio"
-    ],
-    "author": "dingyi222666 <dingyi222666@foxmail.com>",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/dingyi222666/gradio-service.git",
-        "directory": "."
-    },
-    "bugs": {
-        "url": "https://github.com/dingyi222666/gradio-service/issues"
-    },
-    "homepage": "https://github.com/dingyi222666/gradio-service#readme",
-    "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^7.18.0",
-        "@typescript-eslint/parser": "^8.6.0",
-        "atsc": "^1.2.2",
-        "esbuild": "^0.23.1",
-        "esbuild-register": "^3.6.0",
-        "eslint": "^8.57.1",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-config-standard": "^17.1.0",
-        "eslint-plugin-import": "^2.30.0",
-        "eslint-plugin-n": "^16.6.2",
-        "eslint-plugin-prettier": "^5.2.1",
-        "eslint-plugin-promise": "^7.1.0",
-        "koishi": "^4.18.0",
-        "yakumo": "^1.0.0-beta.18",
-        "yakumo-esbuild": "^1.0.0-beta.6",
-        "yakumo-mocha": "^1.0.0-beta.2",
-        "yakumo-tsc": "^1.0.0-beta.4"
-    },
-    "dependencies": {
-        "@dingyi222666/event-stream": "^0.0.1",
-        "semiver": "^1.1.0"
-    },
-    "peerDependencies": {
-        "koishi": "^4.17.0"
-    },
-    "engines": {
-        "node": ">=18.0.0"
-    },
-    "scripts": {
-        "build": "yarn yakumo build",
-        "build:prod": "yarn yakumo build --minify",
-        "bump": "yarn yakumo version",
-        "dep": "yarn yakumo upgrade",
-        "pub": "yarn yakumo publish",
-        "lint": "yarn eslint src --ext=ts",
-        "lint-fix": "yarn eslint src --ext=ts --fix"
-    },
-    "koishi": {
-        "description": {
-            "zh": "为 Koishi 提供 @gradio/client 支持"
-        },
-        "service": {
-            "implements": [
-                "gradio"
-            ]
-        }
+      ]
     }
+  }
 }
