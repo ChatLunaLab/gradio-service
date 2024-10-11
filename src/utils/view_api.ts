@@ -43,7 +43,7 @@ export async function viewApi(this: Client): Promise<any> {
                 headers
             })
         } else {
-            const url = joinUrls(config.root, API_INFO_URL)
+            const url = joinUrls(config.root, this.apiPrefix, API_INFO_URL)
             response = await this.ctx.http(url, {
                 method: 'GET',
                 headers

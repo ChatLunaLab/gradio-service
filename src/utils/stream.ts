@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { Context, HTTP } from 'koishi'
-import { BROKEN_CONNECTION_MSG } from '../constants'
+import { BROKEN_CONNECTION_MSG, SSE_URL } from '../constants'
 import type {} from '@dingyi222666/event-stream'
 import { Client } from '../client'
 import { getJwt } from '../helpers'
@@ -29,7 +29,7 @@ export async function openStream(this: Client): Promise<void> {
         session_hash: this.session_hash
     }).toString()
 
-    const url = new URL(`${config.root}/queue/data?${params}`)
+    const url = new URL(`${config.root}${this.apiPrefix}/${SSE_URL}?${params}`)
 
     if (
         this.config.space_id &&

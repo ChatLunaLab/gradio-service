@@ -33,7 +33,7 @@ export async function upload(
                             const file = new FileData({
                                 ...fileData[i],
                                 path: f,
-                                url: rootUrl + '/file=' + f
+                                url: `${rootUrl}${this.apiPrefix}/file=${f}`
                             })
                             return file
                         })

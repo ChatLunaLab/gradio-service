@@ -28,8 +28,8 @@ export async function uploadFiles(
         })
         try {
             const uploadUrl = uploadId
-                ? `${rootUrl}/${UPLOAD_URL}?upload_id=${uploadId}`
-                : `${rootUrl}/${UPLOAD_URL}`
+                ? `${rootUrl}${this.apiPrefix}/${UPLOAD_URL}?upload_id=${uploadId}`
+                : `${rootUrl}${this.apiPrefix}/${UPLOAD_URL}`
 
             response = await this.ctx.http(uploadUrl, {
                 method: 'POST',

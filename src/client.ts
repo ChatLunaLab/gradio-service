@@ -35,6 +35,7 @@ import { handleBlob } from './utils/handle_blob'
 export class Client {
     appReference: string
     options: ClientOptions
+    apiPrefix = ''
 
     config: Config | undefined
     apiInfo: ApiInfo<JsApiData> | undefined
@@ -179,6 +180,7 @@ export class Client {
 
     private async _configSuccess(_config: Config): Promise<Config> {
         this.config = _config
+        this.apiPrefix = _config.api_prefix || ''
 
         if (this.config.auth_required) {
             return _config

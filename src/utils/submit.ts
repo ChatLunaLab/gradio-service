@@ -13,7 +13,14 @@ import type {
 
 import semiver from 'semiver'
 import { Client } from '../client'
-import { BROKEN_CONNECTION_MSG, QUEUE_FULL_MSG } from '../constants'
+import {
+    BROKEN_CONNECTION_MSG,
+    CANCEL_URL,
+    QUEUE_FULL_MSG,
+    RESET_URL,
+    SSE_DATA_URL,
+    SSE_URL
+} from '../constants'
 import {
     handleMessage,
     mapDataToParams,
@@ -136,18 +143,24 @@ export function submit(
                 }
 
                 if ('event_id' in cancelRequest) {
-                    await fetch(`${config.root}/cancel`, {
-                        headers: { 'Content-Type': 'application/json' },
-                        method: 'POST',
-                        body: JSON.stringify(cancelRequest)
-                    })
+                    await that.ctx.http.post(
+                        `${config.root}${that.apiPrefix}/${CANCEL_URL}`,
+                        JSON.stringify(cancelRequest),
+                        {
+                            headers: { 'Content-Type': 'application/json' },
+                            method: 'POST'
+                        }
+                    )
                 }
 
-                await fetch(`${config.root}/reset`, {
-                    headers: { 'Content-Type': 'application/json' },
-                    method: 'POST',
-                    body: JSON.stringify(resetRequest)
-                })
+                await that.ctx.http.post(
+                    `${config.root}${that.apiPrefix}/${RESET_URL}`,
+                    JSON.stringify(resetRequest),
+                    {
+                        headers: { 'Content-Type': 'application/json' },
+                        method: 'POST'
+                    }
+                )
             } catch (e) {
                 that.ctx.logger.warn(
                     'The `/reset` endpoint could not be called. Subsequent endpoint results may be unreliable.'
@@ -182,7 +195,7 @@ export function submit(
                     })
 
                     this.postData(
-                        `${config.root}/run${
+                        `${config.root}${that.apiPrefix}/run${
                             _endpoint.startsWith('/')
                                 ? _endpoint
                                 : `/${_endpoint}`
@@ -397,8 +410,9 @@ export function submit(
                         fn_index: fn_index.toString(),
                         session_hash
                     }).toString()
+
                     const url = new URL(
-                        `${config.root}/queue/join?${
+                        `${config.root}${that.apiPrefix}/${SSE_URL}?${
                             urlParams ? urlParams + '&' : ''
                         }${params}`
                     )
@@ -442,7 +456,7 @@ export function submit(
                             eventId = _data.event_id as string
 
                             const [, status] = await that.postData(
-                                `${config.root}/queue/data`,
+                                `${config.root}${that.apiPrefix}/queue/data`,
                                 {
                                     ...payload,
                                     session_hash,
@@ -536,7 +550,7 @@ export function submit(
                     })
 
                     const postDataPromise = that.postData(
-                        `${config.root}/queue/join?${urlParams}`,
+                        `${config.root}${that.apiPrefix}/${SSE_DATA_URL}?${urlParams}`,
                         {
                             ...payload,
                             session_hash

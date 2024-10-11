@@ -8,9 +8,9 @@
     "typings": "lib/index.d.ts",
     "exports": {
         ".": {
+            "types": "./lib/index.d.ts",
             "import": "./lib/index.mjs",
-            "require": "./lib/index.cjs",
-            "types": "./lib/index.d.ts"
+            "require": "./lib/index.cjs"
         },
         "./package.json": "./package.json"
     },
@@ -37,12 +37,12 @@
     },
     "homepage": "https://github.com/dingyi222666/gradio-service#readme",
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^8.7.0",
+        "@typescript-eslint/eslint-plugin": "^7.18.0",
         "@typescript-eslint/parser": "^8.6.0",
         "atsc": "^1.2.2",
         "esbuild": "^0.23.1",
         "esbuild-register": "^3.6.0",
-        "eslint": "^9.11.1",
+        "eslint": "^8.57.1",
         "eslint-config-prettier": "^9.1.0",
         "eslint-config-standard": "^17.1.0",
         "eslint-plugin-import": "^2.30.0",
