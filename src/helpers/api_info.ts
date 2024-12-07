@@ -16,7 +16,7 @@ import {
 import { determineProtocol } from './init_helpers'
 
 export const RE_SPACE_NAME = /^[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$/
-export const RE_SPACE_DOMAIN = /.*hf\.space\/{0,1}$/
+export const RE_SPACE_DOMAIN = /.*hf\.space\/{0,1}.*$/
 
 export async function processEndpoint(
     ctx: Context,
@@ -38,8 +38,10 @@ export async function processEndpoint(
     if (RE_SPACE_NAME.test(_appReference)) {
         // app_reference is a HF space name
         try {
+            const baseURL =
+                ctx.gradio?.config?.baseURL ?? 'https://huggingface.co'
             const res = await ctx.http.get(
-                `${ctx.gradio.config.baseURL}/api/spaces/${_appReference}/${HOST_URL}`,
+                `${baseURL}/api/spaces/${_appReference}/${HOST_URL}`,
                 { headers }
             )
 
@@ -60,7 +62,7 @@ export async function processEndpoint(
             determineProtocol(_appReference)
 
         return {
-            space_id: host.replace('.hf.space', ''),
+            space_id: host.split('/')[0].replace('.hf.space', ''),
             ws_protocol,
             http_protocol,
             host

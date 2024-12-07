@@ -290,6 +290,7 @@ export interface ClientOptions {
     with_null_state?: boolean
     events?: EventType[]
     proxyAgent?: string
+    headers?: Record<string, string>
 }
 
 export interface FileData {

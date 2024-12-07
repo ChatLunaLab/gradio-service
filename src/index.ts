@@ -3,6 +3,7 @@
 import { Client } from './client'
 import { Context, Schema, Service } from 'koishi'
 import * as eventStream from '@dingyi222666/event-stream'
+import { ClientOptions } from './types'
 
 export * from './client'
 export * from './constants'
@@ -19,7 +20,7 @@ class GradioClientService extends Service {
         ctx.plugin(eventStream)
     }
 
-    connect(url: string, options?: object) {
+    connect(url: string, options?: ClientOptions) {
         return Client.connect(this.ctx, url, {
             ...options
         })

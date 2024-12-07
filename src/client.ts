@@ -218,6 +218,12 @@ export class Client {
             headers.append('Cookie', this.cookies)
         }
 
+        if (this && this.options.headers) {
+            for (const name in this.options.headers) {
+                headers.append(name, this.options.headers[name])
+            }
+        }
+
         this.abortController = new AbortController()
 
         this.streamInstance = readableStream(this.ctx, url.toString(), {
