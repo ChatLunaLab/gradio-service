@@ -16,7 +16,7 @@ Fork 自 [@gradio/client](https://github.com/gradio-app/gradio/tree/2b6cbf25908e
 
 - duplicate
 - 心跳包监听
-- huggingface space 相关 api
+- huggingface space 唤醒相关 api
 - components 相关 api
 
 新增了以下特性：
