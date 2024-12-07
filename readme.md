@@ -28,7 +28,7 @@ Fork 自 [@gradio/client](https://github.com/gradio-app/gradio/tree/2b6cbf25908e
 ## 使用
 
 ```typescript
-import type {  } from "koishi-plugin-gradio-service"
+import type {} from "koishi-plugin-gradio-service"
 
 const app = ctx.gradio.connect(".....")
 
